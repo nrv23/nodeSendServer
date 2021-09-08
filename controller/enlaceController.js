@@ -50,6 +50,34 @@ const nuevoEnlace = async (req,res) => {
     }
 }
 
+//obtenerEnalce 
+
+const obtenerEnlace = async (req,res,next) => {
+
+    try {
+        
+        const {params:{url}} = req;
+        const existe = await Enlace.findOne({url});
+
+        if(!existe) return res.status(404).json({ msg: 'La url no existe'});
+        res.json({archivo: existe.nombre});
+
+        if(enlace.descargas === 1) {
+            req.archivo = existe.nombre ;
+            next();
+        } else {
+            enlace.descargas--; // actualizar el numero de descargas mientras sea mayor a 1
+            await enlace.save();
+        }
+
+
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
 module.exports = {
-    nuevoEnlace
+    nuevoEnlace,
+    obtenerEnlace
 }

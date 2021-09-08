@@ -13,11 +13,13 @@ app.use(express.json());
 const rutaUsuarios = require("./routes/usuarios");
 const rutaAuth = require("./routes/auth");
 const rutaEnlaces = require("./routes/enlaces");
+const rutaArchivos = require("./routes/archivos");
 
 
 app.use('/api/usuarios',rutaUsuarios());
 app.use('/api/auth',rutaAuth());
 app.use('/api/enlaces',rutaEnlaces());
+app.use('/api/archivos',rutaArchivos());
 
 
 

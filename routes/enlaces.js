@@ -1,8 +1,10 @@
 const express = require("express");
-const {nuevoEnlace} = require("../controller/enlaceController");
+const {nuevoEnlace,obtenerEnlace} = require("../controller/enlaceController");
+
 const router = express.Router();
 const {check} = require("express-validator");
 const auth = require("../middleware/auth");
+const { eliminarArchivo } = require("../controller/archivoController");
 
 
 module.exports = () => {
@@ -14,6 +16,8 @@ module.exports = () => {
             check('nombre_original','El nombre es obligatorio').not().isEmpty(),
         ],
         nuevoEnlace);
+    
+    router.get('/:url',obtenerEnlace,eliminarArchivo);
 
     return router;
 }
