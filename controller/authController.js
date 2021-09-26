@@ -56,7 +56,12 @@ const login = async (req,res) => {
 const usuarioAutenticado = (req,res) => {
    
     const {usuario} = req;
-   res.json({usuario});
+    if(usuario) {
+        res.json({usuario: {
+            id: usuario.id,
+            usuario: usuario.usuario
+        }});
+    }
 }
 
 

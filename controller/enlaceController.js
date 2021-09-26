@@ -3,6 +3,7 @@ const {validationResult} = require("express-validator");
 const {generate} = require("shortid");
 const bcrypt = require("bcrypt");
 
+
 const nuevoEnlace = async (req,res) => {
 
     try {
@@ -11,13 +12,13 @@ const nuevoEnlace = async (req,res) => {
         const errores = validationResult(req); // lee los errores del req.body
         if(!errores.isEmpty()) return res.status(400).json({errores: errores.array()});
 
-        const {nombre_original} = req.body;
+        const {nombre_original,nombre} = req.body;
         const enlace = new Enlace();
 
         //datos autogenerados por el servidor
 
         enlace.url = generate();
-        enlace.nombre = generate();
+        enlace.nombre = nombre;
         enlace.nombre_original =nombre_original;
 
 
@@ -61,23 +62,89 @@ const obtenerEnlace = async (req,res,next) => {
 
         if(!existe) return res.status(404).json({ msg: 'La url no existe'});
         res.json({archivo: existe.nombre});
-
-        if(enlace.descargas === 1) {
-            req.archivo = existe.nombre ;
-            next();
-        } else {
-            enlace.descargas--; // actualizar el numero de descargas mientras sea mayor a 1
-            await enlace.save();
-        }
-
+        
 
     } catch (error) {
         console.log(error)
+        res.status(500).json({
+            msg: 'Error al obtener el enlace'
+        })
     }
+}
 
+
+
+const obtenerEnlaces = async (req,res) => {
+
+    try {
+
+        const enlaces = await Enlace.find({}).select('url -_id'); //el - es para quitar un campo de la consulta
+        res.json({enlaces})
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al cargar los enlaces'
+        })
+    }
+}
+
+const tienePassword = async (req,res,next) => {
+
+    try {
+
+        const {params:{url}} = req;
+        const existe = await Enlace.findOne({url});
+
+        if(!existe) return res.status(404).json({ msg: 'La url no existe'});
+
+
+        if(existe.password) {
+            return res.status(200).json({
+                password: true,
+                enlace: existe.url
+            })
+        }
+
+        return next()
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({msg: 'hubo un error'})
+    }
+}
+
+const verificarPassword = async (req,res,next) => {
+
+    try {
+
+
+        const {params:{url}} = req;
+        const {body:{password}} = req;
+
+        const existe = await Enlace.findOne({url});
+
+        if(!existe) return res.status(404).json({ msg: 'La url no existe'});
+
+        const verificado = await bcrypt.compare(password,existe.password)
+        if(verificado) {
+            return next();
+        } else {
+            return res.status(401).json({
+              msg: 'Password Incorrecto'
+            })
+        }
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({msg: 'hubo un error'})
+    }
 }
 
 module.exports = {
     nuevoEnlace,
-    obtenerEnlace
+    obtenerEnlace,
+    obtenerEnlaces,
+    tienePassword,
+    verificarPassword
 }

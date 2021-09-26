@@ -2,7 +2,7 @@ const multer = require("multer");
 const { generate } = require("shortid");
 const fs = require("fs");
 const Enlace = require("../models/Enlace");
-
+const path = require("path");
 
 const subirArchivo =  async (req,res,next  ) => {
 
@@ -23,8 +23,9 @@ const subirArchivo =  async (req,res,next  ) => {
     const upload = multer(configMulter).single("archivo");
 
     upload(req,res,async(error) => {
+        console.log(req.file)
         if(!error) {
-            res.status(201).json({
+            return res.status(201).json({
                 archivo: req.file.filename
             })
         } else {
@@ -41,10 +42,9 @@ const subirArchivo =  async (req,res,next  ) => {
 
 }
 
+const eliminarArchivo =  (req,res) => {
 
-const eliminarArchivo =  (req,res ) => {
-
-    fs.unlink(__dirname+`/../uploads/${req.archivo}`, async (err) => {
+    fs.unlink(__dirname+`/../uploads/${req.params.archivo}`, (err) => {
         if(err) {
             console.log(err);
             return res.status(500).json({
@@ -52,21 +52,40 @@ const eliminarArchivo =  (req,res ) => {
             })
         }
 
-        try {
-
-            await Enlace.findOneAndRemove(req.params.url);
-        } catch (error) {
-            return res.status(500).json({
-                msg: 'Error al eliminar el registro'
-            })
-        }
+        console.log("Eliminado")
     })
 
 }
 
+const descargarArchivo = async (req,res,next) => {
+
+    try {
+        const {params:{archivo}} = req;
+        console.log(archivo)
+        const enlace = await Enlace.findOne({nombre: archivo});
+        const ruta = path.join(__dirname,'/../uploads/'+archivo);
+        res.download(ruta);
+
+        if(enlace.descargas === 1) {
+            req.archivo = enlace.nombre ;
+            await Enlace.findByIdAndRemove(enlace.id);
+            return next();
+        } else {
+            enlace.descargas--; // actualizar el numero de descargas mientras sea mayor a 1
+            await enlace.save();
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            msg: 'Hubo un error'
+        })
+    }
+    
+}
 
 module.exports = {
 
     subirArchivo,
-    eliminarArchivo
+    eliminarArchivo,
+    descargarArchivo
 }

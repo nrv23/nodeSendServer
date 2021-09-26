@@ -1,11 +1,14 @@
 const express = require("express");
-const {nuevoEnlace,obtenerEnlace} = require("../controller/enlaceController");
-
+const {
+    nuevoEnlace,
+    obtenerEnlace,
+    obtenerEnlaces,
+    tienePassword,
+    verificarPassword
+} = require("../controller/enlaceController");
 const router = express.Router();
 const {check} = require("express-validator");
 const auth = require("../middleware/auth");
-const { eliminarArchivo } = require("../controller/archivoController");
-
 
 module.exports = () => {
 
@@ -17,7 +20,11 @@ module.exports = () => {
         ],
         nuevoEnlace);
     
-    router.get('/:url',obtenerEnlace,eliminarArchivo);
+    router.get('/:url',tienePassword,obtenerEnlace);
+    router.get('/',obtenerEnlaces);
+
+    router.post('/:url',verificarPassword,obtenerEnlace);
+
 
     return router;
 }

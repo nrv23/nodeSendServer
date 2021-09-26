@@ -7,7 +7,7 @@ const auth = require("../middleware/auth");
 module.exports = () => {
 
 
-    router.post('/',[
+    router.post('/',auth,[
         check('email','El email no es válido').isEmail(),
         check('password','EL password es requerido').not().isEmpty()
     ],
